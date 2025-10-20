@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /dashboard/add-introduction/
+Disallow: /dashboard/edit-profile/
+
+Sitemap: https://intros.xyz/sitemap.xml
