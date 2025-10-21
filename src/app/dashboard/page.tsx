@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
-import { SupabaseUserService, SupabaseIntroductionService, SupabaseFriendsService } from '@/lib/supabase-service';
+import { SupabaseUserService, SupabaseIntroductionService, SupabaseFriendsService, SupabaseActivitiesService } from '@/lib/supabase-service';
 import ProfileDropdown from '@/components/ProfileDropdown';
+import AddActivityModal from '@/components/AddActivityModal';
 
 interface SocialLinks {
   linkedin?: string;
@@ -116,8 +117,11 @@ export default function Dashboard() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<Friend[]>([]);
-  const [activeTab, setActiveTab] = useState<'connections' | 'network' | 'analytics'>('connections');
+  const [activities, setActivities] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'connections' | 'network' | 'activities'>('connections');
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddActivityModal, setShowAddActivityModal] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<any>(null);
   const router = useRouter();
 
   const { user: authUser, loading: authLoading, signOut } = useAuth();
@@ -138,6 +142,7 @@ export default function Dashboard() {
         const userFriends = await SupabaseFriendsService.getFriends();
         const incomingFriendRequests = await SupabaseFriendsService.getIncomingRequests();
         const pendingFriendRequests = await SupabaseFriendsService.getPendingRequests();
+        const userActivities = await SupabaseActivitiesService.getActivities();
         
         if (userProfile) {
           setUser(userProfile);
@@ -145,6 +150,7 @@ export default function Dashboard() {
           setFriends(userFriends || []);
           setIncomingRequests(incomingFriendRequests || []);
           setPendingRequests(pendingFriendRequests || []);
+          setActivities(userActivities || []);
         } else {
           router.push('/');
         }
@@ -156,6 +162,7 @@ export default function Dashboard() {
         setFriends([]);
         setIncomingRequests([]);
         setPendingRequests([]);
+        setActivities([]);
       } finally {
         setIsLoading(false);
       }
@@ -206,6 +213,25 @@ export default function Dashboard() {
       console.error('Error with friend action:', error);
       alert('Failed to perform action. Please try again.');
     }
+  };
+
+  const handleDeleteActivity = async (activityId: string) => {
+    if (!confirm('Are you sure you want to delete this activity?')) return;
+    
+    try {
+      await SupabaseActivitiesService.deleteActivity(activityId);
+      // Refresh activities
+      const userActivities = await SupabaseActivitiesService.getActivities();
+      setActivities(userActivities || []);
+    } catch (error) {
+      console.error('Error deleting activity:', error);
+      alert('Failed to delete activity. Please try again.');
+    }
+  };
+
+  const handleEditActivity = (activity: any) => {
+    setEditingActivity(activity);
+    setShowAddActivityModal(true);
   };
 
 
@@ -467,20 +493,20 @@ export default function Dashboard() {
                         {introductions?.length || 0}
                       </div>
                       <div className="text-sm font-medium mt-2" style={{ color: '#6B7280' }}>
-                        Total Introductions
+                        Introductions
                       </div>
                       <div className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
                         {introductions?.filter(intro => intro.verified).length || 0} verified
                       </div>
                     </div>
                     
-                    {/* People Connected */}
+                    {/* Activities */}
                     <div>
                       <div className="text-4xl lg:text-5xl font-black" style={{ color: '#1A2B7A' }}>
-                        {(introductions?.length || 0) * 2}
+                        {activities?.length || 0}
                       </div>
                       <div className="text-sm font-medium mt-2" style={{ color: '#6B7280' }}>
-                        People Connected
+                        Activities
                       </div>
                     </div>
                   </div>
@@ -532,14 +558,14 @@ export default function Dashboard() {
                 )}
               </button>
               <button 
-                onClick={() => setActiveTab('analytics')}
+                onClick={() => setActiveTab('activities')}
                 className="py-4 text-lg font-bold border-b-2 transition-colors" 
                 style={{ 
-                  color: activeTab === 'analytics' ? '#1A2B7A' : '#6B7280',
-                  borderColor: activeTab === 'analytics' ? '#1A2B7A' : 'transparent'
+                  color: activeTab === 'activities' ? '#1A2B7A' : '#6B7280',
+                  borderColor: activeTab === 'activities' ? '#1A2B7A' : 'transparent'
                 }}
               >
-                Analytics
+                Activities
               </button>
             </div>
           </div>
@@ -816,18 +842,166 @@ export default function Dashboard() {
               </div>
             )}
 
-            {activeTab === 'analytics' && (
-              <div className="text-center py-16">
-                <div className="text-6xl mb-6">📊</div>
-                <h3 className="text-2xl font-bold mb-4" style={{ color: '#1A2B7A' }}>Analytics Coming Soon</h3>
-                <p className="text-lg" style={{ color: '#6B7280' }}>
-                  Track your networking progress and insights
-                </p>
+            {activeTab === 'activities' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-bold" style={{ color: '#1A2B7A' }}>Your Activities</h3>
+                  <button
+                    onClick={() => setShowAddActivityModal(true)}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    + Add Activity
+                  </button>
+                </div>
+                
+                {activities.length === 0 ? (
+                  <div className="text-center py-16">
+                    <div className="text-6xl mb-6">📅</div>
+                    <h3 className="text-2xl font-bold mb-4" style={{ color: '#1A2B7A' }}>No activities yet</h3>
+                    <p className="text-lg mb-8" style={{ color: '#6B7280' }}>
+                      Start tracking your networking activities to build your professional network!
+                    </p>
+                    <button
+                      onClick={() => setShowAddActivityModal(true)}
+                      className="inline-block px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-200 hover:scale-105"
+                      style={{ 
+                        backgroundColor: '#1A2B7A',
+                        color: '#FFFFFF'
+                      }}
+                    >
+                      Add Your First Activity
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {activities.map((activity) => {
+                      const activityTypes = {
+                        coffee: { label: 'Coffee', icon: '☕', color: '#8B4513' },
+                        lunch: { label: 'Lunch', icon: '🍽️', color: '#FF6B6B' },
+                        dinner: { label: 'Dinner', icon: '🍽️', color: '#4ECDC4' },
+                        golf: { label: 'Golf', icon: '⛳', color: '#45B7D1' },
+                        tennis: { label: 'Tennis', icon: '🎾', color: '#96CEB4' },
+                        hiking: { label: 'Hiking', icon: '🥾', color: '#6C5CE7' },
+                        event: { label: 'Event', icon: '🎉', color: '#A29BFE' },
+                        conference: { label: 'Conference', icon: '🎤', color: '#FD79A8' },
+                        meeting: { label: 'Meeting', icon: '💼', color: '#FDCB6E' },
+                        phone_call: { label: 'Phone Call', icon: '📞', color: '#E17055' },
+                        video_call: { label: 'Video Call', icon: '📹', color: '#74B9FF' },
+                        other: { label: 'Other', icon: '📝', color: '#636E72' }
+                      };
+                      
+                      const activityConfig = activityTypes[activity.activity_type as keyof typeof activityTypes] || activityTypes.other;
+                      
+                      return (
+                        <div key={activity.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                              <div 
+                                className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
+                                style={{ backgroundColor: activityConfig.color }}
+                              >
+                                {activityConfig.icon}
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-gray-900">{activity.title}</h3>
+                                <p className="text-sm text-gray-600">{activityConfig.label}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <div className="text-right">
+                                <div className="text-sm text-gray-500">
+                                  {new Date(activity.date).toLocaleDateString()}
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-1">
+                                <button
+                                  onClick={() => handleEditActivity(activity)}
+                                  className="p-1 text-gray-400 hover:text-indigo-600 transition-colors"
+                                  title="Edit activity"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteActivity(activity.id)}
+                                  className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                                  title="Delete activity"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {activity.location && (
+                            <div className="flex items-center space-x-1 text-sm text-gray-600 mb-4">
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                              </svg>
+                              <span>{activity.location}</span>
+                            </div>
+                          )}
+
+                          {/* Participants */}
+                          {activity.activity_participants && activity.activity_participants.length > 0 && (
+                            <div className="mb-4">
+                              <h4 className="text-sm font-medium text-gray-700 mb-2">Participants:</h4>
+                              <div className="flex flex-wrap gap-2">
+                                {activity.activity_participants.map((participant: any) => (
+                                  <div key={participant.id} className="flex items-center space-x-2 bg-gray-50 rounded-full px-3 py-1">
+                                    <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-600">
+                                      {participant.participant_name.charAt(0).toUpperCase()}
+                                    </div>
+                                    <span className="text-sm text-gray-700">{participant.participant_name}</span>
+                                    {participant.is_external && (
+                                      <span className="text-xs text-gray-500">(external)</span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {activity.notes && (
+                            <div className="bg-gray-50 rounded-lg p-3">
+                              <h4 className="text-sm font-medium text-gray-700 mb-1">Notes:</h4>
+                              <p className="text-sm text-gray-600">{activity.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Add Activity Modal */}
+      <AddActivityModal
+        isOpen={showAddActivityModal}
+        onClose={() => {
+          setShowAddActivityModal(false);
+          setEditingActivity(null);
+        }}
+        onActivityAdded={async () => {
+          // Refresh activities after adding/updating
+          try {
+            const userActivities = await SupabaseActivitiesService.getActivities();
+            setActivities(userActivities || []);
+          } catch (error) {
+            console.error('Error refreshing activities:', error);
+          }
+          setShowAddActivityModal(false);
+          setEditingActivity(null);
+        }}
+        editingActivity={editingActivity}
+      />
     </div>
   );
 }

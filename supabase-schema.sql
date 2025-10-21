@@ -131,6 +131,106 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 VALUES ('profile-pictures', 'profile-pictures', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
 ON CONFLICT (id) DO NOTHING;
 
+-- Create activities table for tracking networking activities
+CREATE TABLE IF NOT EXISTS public.activities (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE NOT NULL,
+  activity_type TEXT NOT NULL CHECK (activity_type IN (
+    'coffee', 'lunch', 'dinner', 'golf', 'tennis', 'hiking', 'event', 
+    'conference', 'meeting', 'phone_call', 'video_call', 'other'
+  )),
+  title TEXT NOT NULL,
+  description TEXT,
+  date DATE NOT NULL,
+  duration_minutes INTEGER,
+  location TEXT,
+  participants JSONB DEFAULT '[]', -- Array of participant objects with name, email, etc.
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create activity participants table for more detailed tracking
+CREATE TABLE IF NOT EXISTS public.activity_participants (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  activity_id UUID REFERENCES public.activities(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES public.users(id) ON DELETE CASCADE, -- Can be null for external participants
+  participant_name TEXT NOT NULL,
+  participant_email TEXT,
+  participant_phone TEXT,
+  is_external BOOLEAN DEFAULT TRUE, -- True if not a registered user
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS on activities tables
+ALTER TABLE public.activities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.activity_participants ENABLE ROW LEVEL SECURITY;
+
+-- Activities policies
+CREATE POLICY "Users can view their own activities" ON public.activities
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own activities" ON public.activities
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own activities" ON public.activities
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own activities" ON public.activities
+  FOR DELETE USING (auth.uid() = user_id);
+
+-- Allow users to view activities of their friends (for networking insights)
+CREATE POLICY "Users can view friends' activities" ON public.activities
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.friends 
+      WHERE (user_id = auth.uid() AND friend_id = activities.user_id) 
+         OR (friend_id = auth.uid() AND user_id = activities.user_id)
+      AND status = 'accepted'
+    )
+  );
+
+-- Activity participants policies
+CREATE POLICY "Users can view participants of their activities" ON public.activity_participants
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.activities 
+      WHERE activities.id = activity_participants.activity_id 
+      AND activities.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can insert participants to their activities" ON public.activity_participants
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM public.activities 
+      WHERE activities.id = activity_participants.activity_id 
+      AND activities.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can update participants of their activities" ON public.activity_participants
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.activities 
+      WHERE activities.id = activity_participants.activity_id 
+      AND activities.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can delete participants of their activities" ON public.activity_participants
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM public.activities 
+      WHERE activities.id = activity_participants.activity_id 
+      AND activities.user_id = auth.uid()
+    )
+  );
+
+-- Create triggers for activities updated_at
+CREATE TRIGGER update_activities_updated_at BEFORE UPDATE ON public.activities
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 -- Create storage policies for profile pictures
 CREATE POLICY "Users can upload their own profile pictures" ON storage.objects
   FOR INSERT WITH CHECK (

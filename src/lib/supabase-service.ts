@@ -521,6 +521,239 @@ export class SupabaseFriendsService {
   }
 }
 
+// Activities operations
+export class SupabaseActivitiesService {
+  // Get all activities for current user
+  static async getActivities() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+
+    const { data, error } = await supabase
+      .from('activities')
+      .select(`
+        *,
+        activity_participants (
+          id,
+          participant_name,
+          participant_email,
+          participant_phone,
+          is_external,
+          user_id,
+          user:user_id (
+            id,
+            name,
+            profile_picture_url
+          )
+        )
+      `)
+      .eq('user_id', user.id)
+      .order('date', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching activities:', error)
+      return []
+    }
+
+    return data
+  }
+
+  // Get activities for a specific user (for profile viewing)
+  static async getActivitiesByUserId(userId: string) {
+    const { data, error } = await supabase
+      .from('activities')
+      .select(`
+        *,
+        activity_participants (
+          id,
+          participant_name,
+          participant_email,
+          participant_phone,
+          is_external,
+          user_id,
+          user:user_id (
+            id,
+            name,
+            profile_picture_url
+          )
+        )
+      `)
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching user activities:', error)
+      return []
+    }
+
+    return data
+  }
+
+  // Add new activity
+  static async addActivity(activityData: any) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { data, error } = await supabase
+      .from('activities')
+      .insert({
+        user_id: user.id,
+        activity_type: activityData.activityType,
+        title: activityData.title,
+        description: activityData.description,
+        date: activityData.date,
+        duration_minutes: activityData.durationMinutes,
+        location: activityData.location,
+        participants: activityData.participants || [],
+        notes: activityData.notes
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error adding activity:', error)
+      throw error
+    }
+
+    // Add participants if provided
+    if (activityData.participants && activityData.participants.length > 0) {
+      const participantInserts = activityData.participants.map((participant: any) => ({
+        activity_id: data.id,
+        user_id: participant.userId || null,
+        participant_name: participant.name,
+        participant_email: participant.email,
+        participant_phone: participant.phone,
+        is_external: !participant.userId
+      }))
+
+      const { error: participantsError } = await supabase
+        .from('activity_participants')
+        .insert(participantInserts)
+
+      if (participantsError) {
+        console.error('Error adding activity participants:', participantsError)
+        // Don't throw here as the activity was created successfully
+      }
+    }
+
+    return data
+  }
+
+  // Update activity
+  static async updateActivity(activityId: string, updates: any) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { data, error } = await supabase
+      .from('activities')
+      .update({
+        activity_type: updates.activityType,
+        title: updates.title,
+        description: updates.description,
+        date: updates.date,
+        duration_minutes: updates.durationMinutes,
+        location: updates.location,
+        participants: updates.participants,
+        notes: updates.notes,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', activityId)
+      .eq('user_id', user.id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error('Error updating activity:', error)
+      throw error
+    }
+
+    // Update participants if provided
+    if (updates.participants !== undefined) {
+      // Delete existing participants
+      await supabase
+        .from('activity_participants')
+        .delete()
+        .eq('activity_id', activityId)
+
+      // Add new participants
+      if (updates.participants.length > 0) {
+        const participantInserts = updates.participants.map((participant: any) => ({
+          activity_id: activityId,
+          user_id: participant.userId || null,
+          participant_name: participant.name,
+          participant_email: participant.email,
+          participant_phone: participant.phone,
+          is_external: !participant.userId
+        }))
+
+        const { error: participantsError } = await supabase
+          .from('activity_participants')
+          .insert(participantInserts)
+
+        if (participantsError) {
+          console.error('Error updating activity participants:', participantsError)
+        }
+      }
+    }
+
+    return data
+  }
+
+  // Delete activity
+  static async deleteActivity(activityId: string) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('User not authenticated')
+
+    const { error } = await supabase
+      .from('activities')
+      .delete()
+      .eq('id', activityId)
+      .eq('user_id', user.id)
+
+    if (error) {
+      console.error('Error deleting activity:', error)
+      throw error
+    }
+
+    return true
+  }
+
+  // Get activity statistics for a user
+  static async getActivityStats(userId: string) {
+    const { data, error } = await supabase
+      .from('activities')
+      .select('activity_type, date, duration_minutes')
+      .eq('user_id', userId)
+
+    if (error) {
+      console.error('Error fetching activity stats:', error)
+      return {
+        totalActivities: 0,
+        activitiesThisMonth: 0,
+        activitiesThisYear: 0,
+        activityTypes: {},
+        totalDuration: 0
+      }
+    }
+
+    const now = new Date()
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const thisYear = new Date(now.getFullYear(), 0, 1)
+
+    const stats = {
+      totalActivities: data.length,
+      activitiesThisMonth: data.filter(a => new Date(a.date) >= thisMonth).length,
+      activitiesThisYear: data.filter(a => new Date(a.date) >= thisYear).length,
+      activityTypes: data.reduce((acc, activity) => {
+        acc[activity.activity_type] = (acc[activity.activity_type] || 0) + 1
+        return acc
+      }, {} as Record<string, number>),
+      totalDuration: data.reduce((total, activity) => total + (activity.duration_minutes || 0), 0)
+    }
+
+    return stats
+  }
+}
+
 // Migration helper to move localStorage data to Supabase
 export class MigrationService {
   static async migrateLocalStorageToSupabase() {

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthProvider';
 import { SupabaseFriendsService } from '@/lib/supabase-service';
 import ProfileDropdown from '@/components/ProfileDropdown';
+import ActivitiesTab from '@/components/ActivitiesTab';
 
 interface SocialLinks {
   linkedin?: string;
@@ -94,6 +95,7 @@ export default function ViewProfile() {
   const [friendshipStatus, setFriendshipStatus] = useState<FriendshipStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [activeTab, setActiveTab] = useState<'profile' | 'activities'>('profile');
   const params = useParams();
   const router = useRouter();
 
@@ -212,9 +214,39 @@ export default function ViewProfile() {
       </header>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        {/* Profile Card */}
-        <div className="rounded-2xl overflow-hidden shadow-lg" style={{ backgroundColor: '#FFFFFF' }}>
-          <div className="p-4 sm:p-8">
+        {/* Tab Navigation */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('profile')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm cursor-pointer ${
+                  activeTab === 'profile'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Profile
+              </button>
+              <button
+                onClick={() => setActiveTab('activities')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm cursor-pointer ${
+                  activeTab === 'activities'
+                    ? 'border-indigo-500 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Activities
+              </button>
+            </nav>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'profile' ? (
+          /* Profile Card */
+          <div className="rounded-2xl overflow-hidden shadow-lg" style={{ backgroundColor: '#FFFFFF' }}>
+            <div className="p-4 sm:p-8">
             {/* Mobile-first responsive layout */}
             <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
               {/* Profile Picture - Centered on mobile, left-aligned on desktop */}
@@ -407,6 +439,14 @@ export default function ViewProfile() {
             </div>
           </div>
         </div>
+        ) : (
+          /* Activities Tab */
+          <div className="rounded-2xl overflow-hidden shadow-lg" style={{ backgroundColor: '#FFFFFF' }}>
+            <div className="p-4 sm:p-8">
+              <ActivitiesTab userId={userId} isOwnProfile={isOwnProfile} />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
