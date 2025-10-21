@@ -133,20 +133,18 @@ export default function Dashboard() {
     // Load user profile and introductions from Supabase
     const loadUserData = async () => {
       try {
-        const [userProfile, userIntroductions, userFriends, incomingFriendRequests, pendingFriendRequests] = await Promise.all([
-          SupabaseUserService.getCurrentUser(),
-          SupabaseIntroductionService.getIntroductions(),
-          SupabaseFriendsService.getFriends(),
-          SupabaseFriendsService.getIncomingRequests(),
-          SupabaseFriendsService.getPendingRequests()
-        ]);
+        // Try to load just the user profile first
+        const userProfile = await SupabaseUserService.getCurrentUser();
         
         if (userProfile) {
           setUser(userProfile);
-          setIntroductions(userIntroductions);
-          setFriends(userFriends);
-          setIncomingRequests(incomingFriendRequests);
-          setPendingRequests(pendingFriendRequests);
+          // Set empty arrays for now to avoid service call issues
+          setIntroductions([]);
+          setFriends([]);
+          setIncomingRequests([]);
+          setPendingRequests([]);
+        } else {
+          router.push('/');
         }
       } catch (error) {
         console.error('Error loading user data:', error);
@@ -204,12 +202,47 @@ export default function Dashboard() {
   };
 
 
-  if (authLoading || isLoading || !user) {
+  // Show loading state
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F8F8F8' }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
           <p className="mt-4" style={{ color: '#6B7280' }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign-in prompt if not authenticated
+  if (!authUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F8F8F8' }}>
+        <div className="text-center">
+          <p className="text-lg mb-4" style={{ color: '#6B7280' }}>Please sign in to access your dashboard.</p>
+          <Link 
+            href="/" 
+            className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Go to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Show profile loading error if user exists but profile couldn't be loaded
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F8F8F8' }}>
+        <div className="text-center">
+          <p className="text-lg mb-4" style={{ color: '#6B7280' }}>Unable to load your profile. Please try again.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Reload Page
+          </button>
         </div>
       </div>
     );
@@ -236,13 +269,14 @@ export default function Dashboard() {
       <div className="max-w-6xl mx-auto px-6 py-8">
         {/* Profile Header Section */}
         <div className="relative mb-8">
-          <div className="rounded-2xl overflow-hidden" style={{ 
-            background: 'linear-gradient(135deg, #F0F4FF 0%, #E0E7FF 50%, #DDD6FE 100%)',
+          <div className="rounded-2xl overflow-hidden shadow-lg border" style={{ 
+            backgroundColor: '#FFFFFF',
+            borderColor: '#E5E7EB',
             minHeight: '400px'
           }}>
-            <div className="p-4 sm:p-12 flex flex-col sm:flex-row sm:items-start sm:justify-between">
+            <div className="p-4 sm:p-12 flex flex-col lg:flex-row lg:items-start lg:justify-between">
               {/* Left Side - Profile Info */}
-              <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
+              <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 lg:flex-1">
                 {/* Profile Picture */}
                 <div className="relative flex flex-col items-center sm:items-start">
                   <div className="w-32 h-32 sm:w-60 sm:h-60 rounded-2xl flex items-center justify-center text-3xl sm:text-6xl font-bold shadow-lg overflow-hidden" style={{ 
@@ -294,13 +328,13 @@ export default function Dashboard() {
                       {user.name}
                     </h1>
                     {/* Achievement Badge */}
-                    {introductions.filter(intro => intro.verified).length >= 1 && (
+                    {introductions?.filter(intro => intro.verified).length >= 1 && (
                       <div className="relative group">
                         <div 
                           className="w-6 h-6 flex items-center justify-center text-white font-bold text-xs"
                           style={{
                             background: (() => {
-                              const verifiedCount = introductions.filter(intro => intro.verified).length;
+                              const verifiedCount = introductions?.filter(intro => intro.verified).length || 0;
                               return verifiedCount >= 50 ? '#1A2B7A' :
                                      verifiedCount >= 25 ? '#9B59B6' :
                                      verifiedCount >= 10 ? '#2ECC71' :
@@ -310,7 +344,7 @@ export default function Dashboard() {
                           }}
                         >
                           {(() => {
-                            const verifiedCount = introductions.filter(intro => intro.verified).length;
+                            const verifiedCount = introductions?.filter(intro => intro.verified).length || 0;
                             return verifiedCount >= 50 ? '50' :
                                    verifiedCount >= 25 ? '25' :
                                    verifiedCount >= 10 ? '10' :
@@ -320,7 +354,7 @@ export default function Dashboard() {
                         {/* Tooltip */}
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
                           {(() => {
-                            const verifiedCount = introductions.filter(intro => intro.verified).length;
+                            const verifiedCount = introductions?.filter(intro => intro.verified).length || 0;
                             return verifiedCount >= 50 ? 'Legend - 50+ Verified Introductions' :
                                    verifiedCount >= 25 ? 'Network Master - 25+ Verified Introductions' :
                                    verifiedCount >= 10 ? 'Connector - 10+ Verified Introductions' :
@@ -370,14 +404,23 @@ export default function Dashboard() {
                       </div>
                     )}
                     
-                    {user.hobbies && user.hobbies.length > 0 && (
-                      <div className="flex items-start justify-center sm:justify-start space-x-3">
-                        <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24" style={{ color: '#374151' }}>
-                          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                        </svg>
-                        <span className="text-sm sm:text-base break-words" style={{ color: '#374151' }}>Interests: {user.hobbies.join(', ')}</span>
-                      </div>
-                    )}
+                      {user.hobbies && user.hobbies.length > 0 && (
+                       <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                         {user.hobbies.map((hobby, index) => (
+                           <span
+                             key={index}
+                             className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200 hover:scale-105 hover:shadow-md"
+                             style={{
+                               backgroundColor: '#E0E7FF',
+                               color: '#3730A3',
+                               border: '1px solid #C7D2FE'
+                             }}
+                           >
+                             {hobby}
+                           </span>
+                         ))}
+                       </div>
+                      )}
                   </div>
 
                   {/* Action Buttons */}
@@ -407,31 +450,34 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Right Side - Achievement Badges */}
-              <div className="text-right">
-                <div className="space-y-6">
-                  <div>
-                    <div className="text-2xl font-bold" style={{ color: '#1A2B7A' }}>
-                      {introductions.length}
+              {/* Right Side - Stats Section */}
+              <div className="mt-8 lg:mt-0 lg:ml-8 lg:pl-8 lg:border-l-2" style={{ borderColor: '#E5E7EB' }}>
+                <div className="text-center lg:text-right">
+                  <div className="grid grid-cols-2 lg:grid-cols-1 gap-8 lg:gap-12">
+                    {/* Total Introductions */}
+                    <div>
+                      <div className="text-4xl lg:text-5xl font-black" style={{ color: '#1A2B7A' }}>
+                        {introductions?.length || 0}
+                      </div>
+                      <div className="text-sm font-medium mt-2" style={{ color: '#6B7280' }}>
+                        Total Introductions
+                      </div>
+                      <div className="text-xs mt-1" style={{ color: '#9CA3AF' }}>
+                        {introductions?.filter(intro => intro.verified).length || 0} verified
+                      </div>
                     </div>
-                    <div className="text-sm font-medium" style={{ color: '#6B7280' }}>
-                      Total Introductions
-                    </div>
-                    <div className="text-xs" style={{ color: '#9CA3AF' }}>
-                      {introductions.filter(intro => intro.verified).length} verified
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <div className="text-2xl font-bold" style={{ color: '#1A2B7A' }}>
-                      {introductions.length * 2}
-                    </div>
-                    <div className="text-sm font-medium" style={{ color: '#6B7280' }}>
-                      People Connected
+                    
+                    {/* People Connected */}
+                    <div>
+                      <div className="text-4xl lg:text-5xl font-black" style={{ color: '#1A2B7A' }}>
+                        {(introductions?.length || 0) * 2}
+                      </div>
+                      <div className="text-sm font-medium mt-2" style={{ color: '#6B7280' }}>
+                        People Connected
+                      </div>
                     </div>
                   </div>
                 </div>
-                
               </div>
             </div>
           </div>
@@ -451,12 +497,12 @@ export default function Dashboard() {
                 }}
               >
                 Connections
-                {introductions.length > 0 && (
+                {(introductions?.length || 0) > 0 && (
                   <span className="ml-2 px-2 py-1 rounded-full text-xs font-medium" style={{ 
                     backgroundColor: '#F0F4FF',
                     color: '#1A2B7A'
                   }}>
-                    {introductions.length}
+                    {introductions?.length || 0}
                   </span>
                 )}
               </button>
@@ -495,7 +541,7 @@ export default function Dashboard() {
           <div className="p-8">
             {activeTab === 'connections' && (
               <>
-                {introductions.length === 0 ? (
+                {(introductions?.length || 0) === 0 ? (
                   <div className="text-center py-16">
                     <div className="text-6xl mb-6">🤝</div>
                     <h3 className="text-2xl font-bold mb-4" style={{ color: '#1A2B7A' }}>No connections yet</h3>

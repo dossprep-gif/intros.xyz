@@ -58,3 +58,4 @@ async function testStorageSetup() {
 
 // Run the test
 testStorageSetup();
+

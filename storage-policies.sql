@@ -31,3 +31,4 @@ CREATE POLICY "Users can delete their own profile pictures" ON storage.objects
 
 CREATE POLICY "Profile pictures are publicly viewable" ON storage.objects
   FOR SELECT USING (bucket_id = 'profile-pictures');
+

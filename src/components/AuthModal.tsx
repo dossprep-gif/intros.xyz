@@ -133,3 +133,4 @@ export default function AuthModal({ isOpen, onClose, defaultMode = 'signin' }: A
     </div>
   )
 }
+
