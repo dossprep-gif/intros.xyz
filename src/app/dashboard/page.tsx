@@ -133,22 +133,29 @@ export default function Dashboard() {
     // Load user profile and introductions from Supabase
     const loadUserData = async () => {
       try {
-        // Try to load just the user profile first
         const userProfile = await SupabaseUserService.getCurrentUser();
+        const userIntroductions = await SupabaseIntroductionService.getIntroductions();
+        const userFriends = await SupabaseFriendsService.getFriends();
+        const incomingFriendRequests = await SupabaseFriendsService.getIncomingRequests();
+        const pendingFriendRequests = await SupabaseFriendsService.getPendingRequests();
         
         if (userProfile) {
           setUser(userProfile);
-          // Set empty arrays for now to avoid service call issues
-          setIntroductions([]);
-          setFriends([]);
-          setIncomingRequests([]);
-          setPendingRequests([]);
+          setIntroductions(userIntroductions || []);
+          setFriends(userFriends || []);
+          setIncomingRequests(incomingFriendRequests || []);
+          setPendingRequests(pendingFriendRequests || []);
         } else {
           router.push('/');
         }
       } catch (error) {
         console.error('Error loading user data:', error);
-        router.push('/');
+        // Don't redirect on error, just show empty state
+        setUser(null);
+        setIntroductions([]);
+        setFriends([]);
+        setIncomingRequests([]);
+        setPendingRequests([]);
       } finally {
         setIsLoading(false);
       }
