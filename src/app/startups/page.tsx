@@ -133,11 +133,11 @@ export default function StartupsPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
-      {/* Header */}
-      <header className="w-full px-6 py-4 flex justify-between items-center">
+      {/* Header - Mobile Optimized */}
+      <header className="w-full px-4 py-3 flex justify-between items-center">
         <Link href="/" className="flex items-center">
           <div 
-            className="text-2xl font-black uppercase tracking-tight"
+            className="text-xl md:text-2xl font-black uppercase tracking-tight"
             style={{ 
               color: '#1A1A7F',
               fontFamily: 'Druk, system-ui, -apple-system, sans-serif'
@@ -147,10 +147,10 @@ export default function StartupsPage() {
           </div>
         </Link>
 
-        <nav className="flex items-center space-x-6">
+        <nav className="flex items-center space-x-3 md:space-x-6">
           <Link 
             href="/startups"
-            className="text-sm font-bold uppercase tracking-wide transition-colors hover:underline"
+            className="text-xs md:text-sm font-bold uppercase tracking-wide transition-colors hover:underline"
             style={{ 
               color: '#1A1A7F',
               fontFamily: 'Druk, system-ui, -apple-system, sans-serif'
@@ -163,7 +163,7 @@ export default function StartupsPage() {
           {user?.email === 'introsxyzteam@gmail.com' && (
             <Link 
               href="/admin/startups"
-              className="text-sm font-bold uppercase tracking-wide transition-colors hover:underline"
+              className="text-xs md:text-sm font-bold uppercase tracking-wide transition-colors hover:underline"
               style={{ 
                 color: '#1A1A7F',
                 fontFamily: 'Druk, system-ui, -apple-system, sans-serif'
@@ -176,7 +176,7 @@ export default function StartupsPage() {
           {user && (
             <Link 
               href="/dashboard"
-              className="px-4 py-2 text-sm font-medium transition-colors"
+              className="px-3 py-1.5 md:px-4 md:py-2 text-xs md:text-sm font-medium transition-colors"
               style={{ 
                 color: '#1A1A7F',
                 border: '2px solid #1A1A7F'
@@ -188,12 +188,12 @@ export default function StartupsPage() {
         </nav>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Page Header */}
-        <div className="mb-8">
+      {/* Main Content - Mobile Optimized */}
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
+        {/* Page Header - Mobile Optimized */}
+        <div className="mb-6 md:mb-8">
           <h1 
-            className="text-4xl md:text-5xl font-black leading-tight mb-4 tracking-tight"
+            className="text-3xl md:text-4xl lg:text-5xl font-black leading-tight mb-3 md:mb-4 tracking-tight"
             style={{ 
               color: '#1A1A7F',
               fontFamily: 'Druk, system-ui, -apple-system, sans-serif',
@@ -202,14 +202,14 @@ export default function StartupsPage() {
           >
             Startup Funding Tracker
           </h1>
-          <p className="text-lg" style={{ color: '#6B7280' }}>
+          <p className="text-base md:text-lg" style={{ color: '#6B7280' }}>
             A real-time look at the latest startup funding rounds across sports, gaming and leading digital products.
           </p>
         </div>
 
-        {/* Search and Add Button */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="flex-1 relative">
+        {/* Search and Add Button - Mobile Optimized */}
+        <div className="flex flex-col gap-3 mb-6">
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg className="h-5 w-5" style={{ color: '#9CA3AF' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -228,7 +228,7 @@ export default function StartupsPage() {
           {user && (
             <button
               onClick={() => setShowSubmitModal(true)}
-              className="px-6 py-3 font-bold text-white transition-all duration-200 uppercase tracking-wide"
+              className="w-full px-6 py-3 font-bold text-white transition-all duration-200 uppercase tracking-wide"
               style={{ 
                 backgroundColor: '#1A1A7F',
                 fontFamily: 'Druk, system-ui, -apple-system, sans-serif',
@@ -240,155 +240,147 @@ export default function StartupsPage() {
           )}
         </div>
 
-        {/* Startups Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead style={{ backgroundColor: '#F9FAFB' }}>
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#6B7280' }}>
-                    Company
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#6B7280' }}>
-                    Amount Raised
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#6B7280' }}>
-                    Round
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#6B7280' }}>
-                    Date
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#6B7280' }}>
-                    Investors
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-medium uppercase tracking-wider" style={{ color: '#6B7280' }}>
-                    Source
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredStartups.map((startup) => {
-                  const latestRound = startup.funding_rounds?.[0] // Assuming ordered by date desc
-                  return (
-                    <tr key={startup.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            {startup.logo_url ? (
-                              <img
-                                className="h-10 w-10 rounded-full"
-                                src={startup.logo_url}
-                                alt={startup.name}
-                              />
-                            ) : (
-                              <div 
-                                className="h-10 w-10 rounded-full flex items-center justify-center text-white font-bold"
-                                style={{ backgroundColor: '#6B7280' }}
-                              >
-                                {startup.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                          </div>
-                          <div className="ml-4">
-                            <div className="flex items-center space-x-2">
-                              <Link 
-                                href={`/startups/${startup.id}`}
-                                className="text-sm font-medium hover:underline"
-                                style={{ color: '#1F2937' }}
-                              >
-                                {startup.name}
-                              </Link>
-                              {startup.status === 'pending' && (
-                                <span 
-                                  className="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
-                                  style={{ 
-                                    backgroundColor: '#FEF3C7',
-                                    color: '#D97706'
-                                  }}
-                                >
-                                  PENDING
-                                </span>
-                              )}
-                              {startup.status === 'rejected' && (
-                                <span 
-                                  className="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
-                                  style={{ 
-                                    backgroundColor: '#FEE2E2',
-                                    color: '#DC2626'
-                                  }}
-                                >
-                                  REJECTED
-                                </span>
-                              )}
-                            </div>
-                            {startup.industry && (
-                              <div className="text-sm" style={{ color: '#6B7280' }}>
-                                {startup.industry}
-                              </div>
-                            )}
-                          </div>
+        {/* Mobile-Optimized Startup Cards */}
+        <div className="space-y-4">
+          {filteredStartups.map((startup) => {
+            const latestRound = startup.funding_rounds?.[0] // Assuming ordered by date desc
+            return (
+              <div key={startup.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                {/* Company Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex-shrink-0 h-12 w-12">
+                      {startup.logo_url ? (
+                        <img
+                          className="h-12 w-12 rounded-full object-cover"
+                          src={startup.logo_url}
+                          alt={startup.name}
+                        />
+                      ) : (
+                        <div 
+                          className="h-12 w-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+                          style={{ backgroundColor: '#6B7280' }}
+                        >
+                          {startup.name.charAt(0).toUpperCase()}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: '#1F2937' }}>
-                        {latestRound?.amount_raised ? 
-                          formatCurrency(latestRound.amount_raised, latestRound.currency) : 
-                          'Undisclosed'
-                        }
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {latestRound && (
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Link 
+                          href={`/startups/${startup.id}`}
+                          className="text-lg font-semibold hover:underline truncate"
+                          style={{ color: '#1F2937' }}
+                        >
+                          {startup.name}
+                        </Link>
+                        {startup.status === 'pending' && (
                           <span 
-                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full text-white ${getRoundColor(latestRound.round_type)}`}
+                            className="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                            style={{ 
+                              backgroundColor: '#FEF3C7',
+                              color: '#D97706'
+                            }}
                           >
-                            {formatRoundType(latestRound.round_type)}
+                            PENDING
                           </span>
                         )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm" style={{ color: '#1F2937' }}>
-                        {latestRound?.date ? 
-                          new Date(latestRound.date).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric', 
-                            year: 'numeric' 
-                          }) : 
-                          '-'
-                        }
-                      </td>
-                      <td className="px-6 py-4 text-sm" style={{ color: '#1F2937' }}>
-                        <div className="max-w-xs">
-                          {latestRound?.investors?.length ? 
-                            latestRound.investors.map((investor, index) => (
-                              <span key={investor.id}>
-                                {investor.name}
-                                {index < latestRound.investors.length - 1 && ', '}
-                              </span>
-                            )) : 
-                            '-'
-                          }
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        {latestRound?.source_url ? (
-                          <a
-                            href={latestRound.source_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-indigo-600 hover:text-indigo-900"
+                        {startup.status === 'rejected' && (
+                          <span 
+                            className="inline-flex px-2 py-1 text-xs font-semibold rounded-full"
+                            style={{ 
+                              backgroundColor: '#FEE2E2',
+                              color: '#DC2626'
+                            }}
                           >
-                            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                          </a>
-                        ) : (
-                          '-'
+                            REJECTED
+                          </span>
                         )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                      {startup.industry && (
+                        <div className="text-sm" style={{ color: '#6B7280' }}>
+                          {startup.industry}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Round Badge */}
+                  {latestRound?.round_type && (
+                    <span 
+                      className="inline-flex px-3 py-1 text-sm font-semibold rounded-full text-white"
+                      style={{ backgroundColor: getRoundColor(latestRound.round_type) }}
+                    >
+                      {formatRoundType(latestRound.round_type)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Funding Details */}
+                {latestRound && (
+                  <div className="space-y-2">
+                    {/* Amount and Date Row */}
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm" style={{ color: '#6B7280' }}>
+                        Amount: <span className="font-semibold" style={{ color: '#1F2937' }}>
+                          {latestRound.amount_raised ? 
+                            formatCurrency(latestRound.amount_raised, latestRound.currency) : 
+                            'Undisclosed'
+                          }
+                        </span>
+                      </div>
+                      <div className="text-sm" style={{ color: '#6B7280' }}>
+                        Date: <span className="font-semibold" style={{ color: '#1F2937' }}>
+                          {latestRound.date ? 
+                            new Date(latestRound.date).toLocaleDateString('en-US', { 
+                              month: 'short', 
+                              day: 'numeric', 
+                              year: 'numeric' 
+                            }) : 
+                            'Unknown'
+                          }
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Investors */}
+                    {latestRound.investors && latestRound.investors.length > 0 && (
+                      <div className="text-sm" style={{ color: '#6B7280' }}>
+                        <span className="font-medium">Investors:</span> 
+                        <span className="ml-1" style={{ color: '#1F2937' }}>
+                          {latestRound.investors.map(investor => investor.name).join(', ')}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Source Link */}
+                    {latestRound.source_url && (
+                      <div className="flex justify-end">
+                        <a
+                          href={latestRound.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-sm text-indigo-600 hover:text-indigo-900"
+                        >
+                          <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                          Source
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* No funding data message */}
+                {!latestRound && (
+                  <div className="text-sm text-center py-2" style={{ color: '#6B7280' }}>
+                    No funding data available
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
 
         {filteredStartups.length === 0 && (

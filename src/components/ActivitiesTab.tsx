@@ -119,35 +119,35 @@ export default function ActivitiesTab({ userId, isOwnProfile = false }: Activiti
 
   return (
     <div className="space-y-6">
-      {/* Stats Overview */}
+      {/* Mobile-Optimized Stats Overview */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-indigo-600">{stats.totalActivities}</div>
-            <div className="text-sm text-gray-600">Total Activities</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          <div className="bg-white rounded-lg p-4 md:p-4 shadow-sm">
+            <div className="text-3xl md:text-2xl font-bold text-indigo-600">{stats.totalActivities}</div>
+            <div className="text-base md:text-sm text-gray-600">Total Activities</div>
           </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-green-600">{stats.activitiesThisMonth}</div>
-            <div className="text-sm text-gray-600">This Month</div>
+          <div className="bg-white rounded-lg p-4 md:p-4 shadow-sm">
+            <div className="text-3xl md:text-2xl font-bold text-green-600">{stats.activitiesThisMonth}</div>
+            <div className="text-base md:text-sm text-gray-600">This Month</div>
           </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-blue-600">{stats.activitiesThisYear}</div>
-            <div className="text-sm text-gray-600">This Year</div>
+          <div className="bg-white rounded-lg p-4 md:p-4 shadow-sm">
+            <div className="text-3xl md:text-2xl font-bold text-blue-600">{stats.activitiesThisYear}</div>
+            <div className="text-base md:text-sm text-gray-600">This Year</div>
           </div>
-          <div className="bg-white rounded-lg p-4 shadow-sm">
-            <div className="text-2xl font-bold text-purple-600">
+          <div className="bg-white rounded-lg p-4 md:p-4 shadow-sm">
+            <div className="text-3xl md:text-2xl font-bold text-purple-600">
               {stats.totalDuration > 0 ? formatDuration(stats.totalDuration) : '0m'}
             </div>
-            <div className="text-sm text-gray-600">Total Time</div>
+            <div className="text-base md:text-sm text-gray-600">Total Time</div>
           </div>
         </div>
       )}
 
-      {/* Activity Type Filter */}
+      {/* Mobile-Optimized Activity Type Filter */}
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setSelectedFilter('all')}
-          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+          className={`px-4 py-2 rounded-full text-base md:text-sm font-medium transition-colors ${
             selectedFilter === 'all'
               ? 'bg-indigo-100 text-indigo-700'
               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -159,7 +159,7 @@ export default function ActivitiesTab({ userId, isOwnProfile = false }: Activiti
           <button
             key={type}
             onClick={() => setSelectedFilter(type)}
-            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-full text-base md:text-sm font-medium transition-colors ${
               selectedFilter === type
                 ? 'bg-indigo-100 text-indigo-700'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -190,36 +190,36 @@ export default function ActivitiesTab({ userId, isOwnProfile = false }: Activiti
             const activityConfig = ACTIVITY_TYPES[activity.activity_type as keyof typeof ACTIVITY_TYPES] || ACTIVITY_TYPES.other;
             
             return (
-              <div key={activity.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div key={activity.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg"
+                      className="w-12 h-12 md:w-10 md:h-10 rounded-full flex items-center justify-center text-white text-xl md:text-lg"
                       style={{ backgroundColor: activityConfig.color }}
                     >
                       {activityConfig.icon}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">{activity.title}</h3>
-                      <p className="text-sm text-gray-600">{activityConfig.label}</p>
+                      <h3 className="font-semibold text-lg md:text-base text-gray-900">{activity.title}</h3>
+                      <p className="text-base md:text-sm text-gray-600">{activityConfig.label}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-gray-500">{formatDate(activity.date)}</div>
+                    <div className="text-base md:text-sm text-gray-500">{formatDate(activity.date)}</div>
                     {activity.duration_minutes && (
-                      <div className="text-sm text-gray-600">{formatDuration(activity.duration_minutes)}</div>
+                      <div className="text-base md:text-sm text-gray-600">{formatDuration(activity.duration_minutes)}</div>
                     )}
                   </div>
                 </div>
 
                 {activity.description && (
-                  <p className="text-gray-700 mb-4">{activity.description}</p>
+                  <p className="text-base md:text-sm text-gray-700 mb-4">{activity.description}</p>
                 )}
 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-4">
+                <div className="flex flex-wrap gap-4 text-base md:text-sm text-gray-600 mb-4">
                   {activity.location && (
-                    <div className="flex items-center space-x-1">
-                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <div className="flex items-center space-x-2">
+                      <svg className="w-5 h-5 md:w-4 md:h-4" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                       </svg>
                       <span>{activity.location}</span>
@@ -227,27 +227,27 @@ export default function ActivitiesTab({ userId, isOwnProfile = false }: Activiti
                   )}
                 </div>
 
-                {/* Participants */}
+                {/* Mobile-Optimized Participants */}
                 {activity.activity_participants && activity.activity_participants.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-2">Participants:</h4>
-                    <div className="flex flex-wrap gap-2">
+                    <h4 className="text-base md:text-sm font-medium text-gray-700 mb-3">Participants:</h4>
+                    <div className="flex flex-wrap gap-3">
                       {activity.activity_participants.map((participant) => (
-                        <div key={participant.id} className="flex items-center space-x-2 bg-gray-50 rounded-full px-3 py-1">
+                        <div key={participant.id} className="flex items-center space-x-3 bg-gray-50 rounded-full px-4 py-2">
                           {participant.user?.profile_picture_url ? (
                             <img
                               src={participant.user.profile_picture_url}
                               alt={participant.participant_name}
-                              className="w-6 h-6 rounded-full"
+                              className="w-8 h-8 md:w-6 md:h-6 rounded-full"
                             />
                           ) : (
-                            <div className="w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-medium text-indigo-600">
+                            <div className="w-8 h-8 md:w-6 md:h-6 rounded-full bg-indigo-100 flex items-center justify-center text-sm md:text-xs font-medium text-indigo-600">
                               {participant.participant_name.charAt(0).toUpperCase()}
                             </div>
                           )}
-                          <span className="text-sm text-gray-700">{participant.participant_name}</span>
+                          <span className="text-base md:text-sm text-gray-700">{participant.participant_name}</span>
                           {participant.is_external && (
-                            <span className="text-xs text-gray-500">(external)</span>
+                            <span className="text-sm md:text-xs text-gray-500">(external)</span>
                           )}
                         </div>
                       ))}
@@ -256,9 +256,9 @@ export default function ActivitiesTab({ userId, isOwnProfile = false }: Activiti
                 )}
 
                 {activity.notes && (
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <h4 className="text-sm font-medium text-gray-700 mb-1">Notes:</h4>
-                    <p className="text-sm text-gray-600">{activity.notes}</p>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-base md:text-sm font-medium text-gray-700 mb-2">Notes:</h4>
+                    <p className="text-base md:text-sm text-gray-600">{activity.notes}</p>
                   </div>
                 )}
               </div>

@@ -80,6 +80,24 @@ export default function Home() {
               </Link>
             )}
             
+            {/* Sign In button for non-authenticated users */}
+            {!user && (
+              <button
+                onClick={() => {
+                  setAuthMode('signin')
+                  setShowAuthModal(true)
+                }}
+                className="px-4 py-2 font-bold text-white transition-all duration-200 uppercase tracking-wide"
+                style={{ 
+                  backgroundColor: '#1A1A7F',
+                  fontFamily: 'Druk, system-ui, -apple-system, sans-serif',
+                  borderRadius: '0'
+                }}
+              >
+                Sign In
+              </button>
+            )}
+            
             {/* Profile Dropdown for authenticated users */}
             {user && (
               <ProfileDropdown 

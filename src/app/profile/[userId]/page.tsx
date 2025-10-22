@@ -237,13 +237,13 @@ export default function ViewProfile() {
       </header>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-        {/* Tab Navigation */}
+        {/* Mobile-Optimized Tab Navigation */}
         <div className="mb-6">
           <div className="border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
+            <nav className="-mb-px flex space-x-4 sm:space-x-8">
               <button
                 onClick={() => setActiveTab('profile')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm cursor-pointer ${
+                className={`py-3 px-2 border-b-2 font-medium text-base sm:text-sm cursor-pointer transition-colors ${
                   activeTab === 'profile'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -253,7 +253,7 @@ export default function ViewProfile() {
               </button>
               <button
                 onClick={() => setActiveTab('activities')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm cursor-pointer ${
+                className={`py-3 px-2 border-b-2 font-medium text-base sm:text-sm cursor-pointer transition-colors ${
                   activeTab === 'activities'
                     ? 'border-indigo-500 text-indigo-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -267,14 +267,14 @@ export default function ViewProfile() {
 
         {/* Tab Content */}
         {activeTab === 'profile' ? (
-          /* Profile Card */
+          /* Mobile-Optimized Profile Card */
           <div className="rounded-2xl overflow-hidden shadow-lg" style={{ backgroundColor: '#FFFFFF' }}>
-            <div className="p-4 sm:p-8">
+            <div className="p-6 sm:p-8">
             {/* Mobile-first responsive layout */}
-            <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
+            <div className="flex flex-col sm:flex-row sm:items-start space-y-6 sm:space-y-0 sm:space-x-6">
               {/* Profile Picture - Centered on mobile, left-aligned on desktop */}
               <div className="relative flex flex-col items-center sm:items-start">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center text-2xl sm:text-4xl font-bold shadow-lg overflow-hidden" style={{ 
+                <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl font-bold shadow-lg overflow-hidden" style={{ 
                   backgroundColor: '#F0F4FF',
                   color: '#1A2B7A'
                 }}>
@@ -316,10 +316,10 @@ export default function ViewProfile() {
                 )}
               </div>
 
-              {/* Profile Details */}
+              {/* Mobile-Optimized Profile Details */}
               <div className="flex-1 text-center sm:text-left">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-3 sm:space-y-0">
-                  <h1 className="text-2xl sm:text-3xl font-bold break-words" style={{ color: '#1A2B7A' }}>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 space-y-4 sm:space-y-0">
+                  <h1 className="text-3xl sm:text-3xl font-bold break-words" style={{ color: '#1A2B7A' }}>
                     {profile.name}
                   </h1>
                   
@@ -393,8 +393,8 @@ export default function ViewProfile() {
                   )}
                 </div>
                 
-                {/* Personal Information */}
-                <div className="space-y-3 mb-6">
+                {/* Mobile-Optimized Personal Information */}
+                <div className="space-y-4 mb-8">
                   {profile.position && (
                     <div className="flex items-center justify-center sm:justify-start space-x-3">
                       <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" style={{ color: '#374151' }}>
