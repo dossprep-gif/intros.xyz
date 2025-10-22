@@ -131,6 +131,11 @@ INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 VALUES ('profile-pictures', 'profile-pictures', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
 ON CONFLICT (id) DO NOTHING;
 
+-- Create storage bucket for startup logos
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types) 
+VALUES ('startup-logos', 'startup-logos', true, 5242880, ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+ON CONFLICT (id) DO NOTHING;
+
 -- Create activities table for tracking networking activities
 CREATE TABLE IF NOT EXISTS public.activities (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -252,3 +257,178 @@ CREATE POLICY "Users can delete their own profile pictures" ON storage.objects
 
 CREATE POLICY "Profile pictures are publicly viewable" ON storage.objects
   FOR SELECT USING (bucket_id = 'profile-pictures');
+
+-- Storage policies for startup logos
+CREATE POLICY "Startup logos are publicly viewable" ON storage.objects
+  FOR SELECT USING (bucket_id = 'startup-logos');
+
+CREATE POLICY "Authenticated users can upload startup logos" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'startup-logos' AND 
+    auth.uid() IS NOT NULL
+  );
+
+CREATE POLICY "Authenticated users can update startup logos" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'startup-logos' AND 
+    auth.uid() IS NOT NULL
+  );
+
+CREATE POLICY "Authenticated users can delete startup logos" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'startup-logos' AND 
+    auth.uid() IS NOT NULL
+  );
+
+-- Create startups table
+CREATE TABLE IF NOT EXISTS public.startups (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  website_url TEXT,
+  logo_url TEXT,
+  linkedin_url TEXT,
+  careers_url TEXT,
+  industry TEXT,
+  location TEXT,
+  founded_date DATE,
+  status TEXT DEFAULT 'approved' CHECK (status IN ('pending', 'approved', 'rejected')),
+  submitted_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  reviewed_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+  review_notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create funding_rounds table
+CREATE TABLE IF NOT EXISTS public.funding_rounds (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  startup_id UUID REFERENCES public.startups(id) ON DELETE CASCADE NOT NULL,
+  round_type TEXT NOT NULL CHECK (round_type IN ('seed', 'series_a', 'series_b', 'series_c', 'series_d', 'series_e', 'pre_seed', 'bridge', 'convertible_note', 'other')),
+  amount_raised BIGINT, -- Amount in cents to avoid floating point issues
+  currency TEXT DEFAULT 'USD',
+  date DATE NOT NULL,
+  source_url TEXT,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create investors table
+CREATE TABLE IF NOT EXISTS public.investors (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL,
+  type TEXT CHECK (type IN ('vc_firm', 'angel', 'corporate', 'government', 'other')),
+  website_url TEXT,
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create funding_round_investors junction table
+CREATE TABLE IF NOT EXISTS public.funding_round_investors (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  funding_round_id UUID REFERENCES public.funding_rounds(id) ON DELETE CASCADE NOT NULL,
+  investor_id UUID REFERENCES public.investors(id) ON DELETE CASCADE NOT NULL,
+  is_lead BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(funding_round_id, investor_id)
+);
+
+-- Enable RLS on startup tables
+ALTER TABLE public.startups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.funding_rounds ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.investors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.funding_round_investors ENABLE ROW LEVEL SECURITY;
+
+-- Only approved startups are publicly viewable
+CREATE POLICY "Approved startups are publicly viewable" ON public.startups
+  FOR SELECT USING (status = 'approved');
+
+-- Users can view their own submitted startups
+CREATE POLICY "Users can view their own submitted startups" ON public.startups
+  FOR SELECT USING (auth.uid() = submitted_by);
+
+-- Allow authenticated users to submit startups (pending status)
+CREATE POLICY "Authenticated users can submit startups" ON public.startups
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+-- Users can update their own pending startups
+CREATE POLICY "Users can update their own pending startups" ON public.startups
+  FOR UPDATE USING (auth.uid() = submitted_by AND status = 'pending');
+
+-- Users can delete their own pending startups
+CREATE POLICY "Users can delete their own pending startups" ON public.startups
+  FOR DELETE USING (auth.uid() = submitted_by AND status = 'pending');
+
+-- Admin users can view all startups (for approval)
+CREATE POLICY "Admin users can view all startups" ON public.startups
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.users 
+      WHERE users.id = auth.uid() 
+      AND users.email = 'introsxyzteam@gmail.com' -- Your admin email
+    )
+  );
+
+-- Admin users can update startup status
+CREATE POLICY "Admin users can update startup status" ON public.startups
+  FOR UPDATE USING (
+    EXISTS (
+      SELECT 1 FROM public.users 
+      WHERE users.id = auth.uid() 
+      AND users.email = 'introsxyzteam@gmail.com' -- Your admin email
+    )
+  );
+
+-- Funding rounds are publicly viewable
+CREATE POLICY "Funding rounds are publicly viewable" ON public.funding_rounds
+  FOR SELECT USING (true);
+
+-- Allow authenticated users to manage funding rounds
+CREATE POLICY "Authenticated users can insert funding rounds" ON public.funding_rounds
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can update funding rounds" ON public.funding_rounds
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can delete funding rounds" ON public.funding_rounds
+  FOR DELETE USING (auth.uid() IS NOT NULL);
+
+-- Investors are publicly viewable
+CREATE POLICY "Investors are publicly viewable" ON public.investors
+  FOR SELECT USING (true);
+
+-- Allow authenticated users to manage investors
+CREATE POLICY "Authenticated users can insert investors" ON public.investors
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can update investors" ON public.investors
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can delete investors" ON public.investors
+  FOR DELETE USING (auth.uid() IS NOT NULL);
+
+-- Funding round investors are publicly viewable
+CREATE POLICY "Funding round investors are publicly viewable" ON public.funding_round_investors
+  FOR SELECT USING (true);
+
+-- Allow authenticated users to manage funding round investors
+CREATE POLICY "Authenticated users can insert funding round investors" ON public.funding_round_investors
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can update funding round investors" ON public.funding_round_investors
+  FOR UPDATE USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can delete funding round investors" ON public.funding_round_investors
+  FOR DELETE USING (auth.uid() IS NOT NULL);
+
+-- Create triggers for startup tables updated_at
+CREATE TRIGGER update_startups_updated_at BEFORE UPDATE ON public.startups
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_funding_rounds_updated_at BEFORE UPDATE ON public.funding_rounds
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_investors_updated_at BEFORE UPDATE ON public.investors
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

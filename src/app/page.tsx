@@ -53,15 +53,43 @@ export default function Home() {
             </div>
           </Link>
 
-          {/* Profile Dropdown for authenticated users */}
-          {user && (
-            <ProfileDropdown 
-              user={{
-                name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-                profile_picture_url: user.user_metadata?.profile_picture_url
-              }} 
-            />
-          )}
+          {/* Navigation */}
+          <nav className="flex items-center space-x-6">
+            <Link 
+              href="/startups"
+              className="text-sm font-bold uppercase tracking-wide transition-colors hover:underline"
+              style={{ 
+                color: '#1A1A7F',
+                fontFamily: 'Druk, system-ui, -apple-system, sans-serif'
+              }}
+            >
+              Startups
+            </Link>
+            
+            {/* Admin link for admin users */}
+            {user?.email === 'introsxyzteam@gmail.com' && (
+              <Link 
+                href="/admin/startups"
+                className="text-sm font-bold uppercase tracking-wide transition-colors hover:underline"
+                style={{ 
+                  color: '#1A1A7F',
+                  fontFamily: 'Druk, system-ui, -apple-system, sans-serif'
+                }}
+              >
+                Admin
+              </Link>
+            )}
+            
+            {/* Profile Dropdown for authenticated users */}
+            {user && (
+              <ProfileDropdown 
+                user={{
+                  name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+                  profile_picture_url: user.user_metadata?.profile_picture_url
+                }} 
+              />
+            )}
+          </nav>
         </header>
 
         {/* Main Content */}

@@ -182,35 +182,58 @@ export default function ViewProfile() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F8F8F8' }}>
       {/* Header */}
-      <header className="p-4 sm:p-6" style={{ backgroundColor: '#FFFFFF' }}>
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Link href="/" className="text-xl sm:text-2xl font-extrabold" style={{ color: '#1A2B7A' }}>
-                intros.xyz
-              </Link>
-              <span className="hidden sm:inline" style={{ color: '#E5E7EB' }}>|</span>
-              <span className="hidden sm:inline text-sm sm:text-base" style={{ color: '#6B7280' }}>Profile</span>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-6">
-              <Link
-                href="/dashboard"
-                className="font-semibold px-2 sm:px-4 py-2 rounded-md transition-colors text-sm sm:text-base"
-                style={{ color: '#334D99' }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#F0F4FF';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-              >
-                <span className="hidden sm:inline">Back to Dashboard</span>
-                <span className="sm:hidden">Back</span>
-              </Link>
-              <ProfileDropdown user={authUser} />
-            </div>
+      <header className="w-full px-6 py-4 flex justify-between items-center">
+        <Link href="/" className="flex items-center">
+          <div 
+            className="text-2xl font-black uppercase tracking-tight"
+            style={{ 
+              color: '#1A1A7F',
+              fontFamily: 'Druk, system-ui, -apple-system, sans-serif'
+            }}
+          >
+            intros.xyz
           </div>
-        </div>
+        </Link>
+
+        <nav className="flex items-center space-x-6">
+          <Link 
+            href="/startups"
+            className="text-sm font-bold uppercase tracking-wide transition-colors hover:underline"
+            style={{ 
+              color: '#1A1A7F',
+              fontFamily: 'Druk, system-ui, -apple-system, sans-serif'
+            }}
+          >
+            Startups
+          </Link>
+          
+          {/* Admin link for admin users */}
+          {authUser?.email === 'introsxyzteam@gmail.com' && (
+            <Link 
+              href="/admin/startups"
+              className="text-sm font-bold uppercase tracking-wide transition-colors hover:underline"
+              style={{ 
+                color: '#1A1A7F',
+                fontFamily: 'Druk, system-ui, -apple-system, sans-serif'
+              }}
+            >
+              Admin
+            </Link>
+          )}
+          
+          <Link
+            href="/dashboard"
+            className="px-4 py-2 text-sm font-medium transition-colors"
+            style={{ 
+              color: '#1A1A7F',
+              border: '2px solid #1A1A7F'
+            }}
+          >
+            Dashboard
+          </Link>
+          
+          <ProfileDropdown user={authUser} />
+        </nav>
       </header>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
